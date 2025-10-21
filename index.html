@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中药材产品科普展示</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/RGBELoader.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar.scrolled {
+            padding: 0.5rem 0;
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c7744;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .logo i {
+            font-size: 2rem;
+        }
+        
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-menu a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+        
+        .nav-menu a:hover {
+            color: #2c7744;
+        }
+        
+        .nav-menu a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #2c7744;
+            transition: width 0.3s;
+        }
+        
+        .nav-menu a:hover::after {
+            width: 100%;
+        }
+        
+        /* 英雄区 */
+        .hero {
+            margin-top: 80px;
+            height: 70vh;
+            background: linear-gradient(135deg, #2c7744 0%, #5a9f68 50%, #7bc295 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+            background-size: 50px 50px;
+            animation: movePattern 20s linear infinite;
+            opacity: 0.3;
+        }
+        
+        @keyframes movePattern {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            padding: 2rem;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+        
+        .hero-btn {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: white;
+            color: #2c7744;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .hero-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        /* 通用容器 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: #2c7744;
+            margin-bottom: 0.5rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #2c7744, #5a9f68);
+            border-radius: 2px;
+        }
+        
+        .section-title p {
+            color: #666;
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+        }
+        
+        /* 3D模型展示区 */
+        .model-section {
+            background: white;
+            padding: 4rem 0;
+        }
+        
+        .model-container-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        
+        .model-viewer-3d {
+            width: 100%;
+            height: 600px;
+            background: #1a1a1a;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        
+        /* 模型控制按钮 */
+        .model-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .model-control-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            color: #2c7744;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .model-control-btn:hover {
+            background: #5a9f68;
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .model-control-btn.active {
+            background: #2c7744;
+            color: white;
+        }
+        
+        /* 模型滑块控制 */
+        .model-sliders {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            border-radius: 10px;
+            z-index: 10;
+        }
+        
+        .slider-group {
+            margin-bottom: 1rem;
+        }
+        
+        .slider-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .slider-label span:first-child {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #5a9f68;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #2c7744;
+            transform: scale(1.2);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #5a9f68;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .model-stats {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            z-index: 5;
+        }
+        
+        .model-info {
+            padding: 2rem;
+        }
+        
+        .model-info h3 {
+            font-size: 2rem;
+            color: #2c7744;
+            margin-bottom: 1.5rem;
+        }
+        
+        .model-info p {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+        
+        .feature-list {
+            list-style: none;
+        }
+        
+        .feature-list li {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #f8faf9;
+            border-left: 4px solid #5a9f68;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .feature-list li i {
+            font-size: 1.5rem;
+            color: #2c7744;
+        }
+        
+        /* 产品信息卡片 */
+        .info-cards {
+            background: #f8faf9;
+            padding: 4rem 0;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .info-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+        
+        .info-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        .card-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #2c7744, #5a9f68);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: white;
+            font-size: 2rem;
+        }
+        
+        .info-card h4 {
+            font-size: 1.5rem;
+            color: #2c7744;
+            margin-bottom: 1rem;
+        }
+        
+        .info-card ul {
+            list-style: none;
+            color: #666;
+        }
+        
+        .info-card ul li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .info-card ul li:last-child {
+            border-bottom: none;
+        }
+        
+        .info-card ul li i {
+            color: #5a9f68;
+            margin-right: 0.5rem;
+        }
+        
+        /* 三维动画展示区 */
+        .animation-section {
+            background: white;
+            padding: 4rem 0;
+        }
+        
+        .animation-container {
+            background: #1a1a1a;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            position: relative;
+            height: 500px;
+        }
+        
+        .animation-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+        }
+        
+        .animation-placeholder i {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            color: #5a9f68;
+        }
+        
+        .animation-controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .anim-btn {
+            padding: 0.8rem 2rem;
+            background: #5a9f68;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .anim-btn:hover {
+            background: #2c7744;
+            transform: translateY(-2px);
+        }
+        
+        /* 溯源信息区 */
+        .traceability-section {
+            background: linear-gradient(135deg, #f8faf9 0%, #e8f5e9 100%);
+            padding: 4rem 0;
+        }
+        
+        .trace-timeline {
+            position: relative;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 0;
+        }
+        
+        .trace-timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, #2c7744, #5a9f68, #7bc295);
+            transform: translateX(-50%);
+        }
+        
+        .trace-item {
+            margin-bottom: 3rem;
+            position: relative;
+            width: 45%;
+        }
+        
+        .trace-item:nth-child(odd) {
+            margin-left: 0;
+            text-align: right;
+        }
+        
+        .trace-item:nth-child(even) {
+            margin-left: 55%;
+            text-align: left;
+        }
+        
+        .trace-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .trace-content::before {
+            content: '';
+            position: absolute;
+            top: 30px;
+            width: 20px;
+            height: 20px;
+            background: #2c7744;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 0 0 4px #2c7744;
+        }
+        
+        .trace-item:nth-child(odd) .trace-content::before {
+            right: -60px;
+        }
+        
+        .trace-item:nth-child(even) .trace-content::before {
+            left: -60px;
+        }
+        
+        .trace-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #2c7744, #5a9f68);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        
+        .trace-content h4 {
+            font-size: 1.5rem;
+            color: #2c7744;
+            margin-bottom: 0.5rem;
+        }
+        
+        .trace-content .date {
+            color: #5a9f68;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        .trace-content p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        /* VI设计展示区 */
+        .vi-section {
+            background: white;
+            padding: 4rem 0;
+        }
+        
+        .vi-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .vi-item {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .vi-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .vi-item img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .vi-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(44, 119, 68, 0.95), transparent);
+            color: white;
+            padding: 1.5rem;
+            transform: translateY(100%);
+            transition: transform 0.3s;
+        }
+        
+        .vi-item:hover .vi-overlay {
+            transform: translateY(0);
+        }
+        
+        .vi-overlay h4 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* 页脚 */
+        footer {
+            background: #2c7744;
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            text-align: left;
+        }
+        
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .footer-section p, .footer-section a {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            display: block;
+            margin: 0.5rem 0;
+        }
+        
+        .footer-section a:hover {
+            color: white;
+        }
+        
+        .qr-code {
+            width: 150px;
+            height: 150px;
+            background: white;
+            margin: 1rem auto;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2c7744;
+            font-size: 3rem;
+        }
+        
+        .copyright {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.3);
+            text-align: center;
+            opacity: 0.9;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 968px) {
+            .model-container-wrapper {
+                grid-template-columns: 1fr;
+            }
+            
+            .trace-timeline::before {
+                left: 30px;
+            }
+            
+            .trace-item {
+                width: 100%;
+                margin-left: 60px !important;
+                text-align: left !important;
+            }
+            
+            .trace-item:nth-child(odd) .trace-content::before,
+            .trace-item:nth-child(even) .trace-content::before {
+                left: -60px;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-menu {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* 加载动画 */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            text-align: center;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: #5a9f68;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                <span>养生堂·人参系列</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#model">3D展示</a></li>
+                <li><a href="#info">产品信息</a></li>
+                <li><a href="#animation">作用机制</a></li>
+                <li><a href="#trace">溯源追踪</a></li>
+                <li><a href="#vi">品牌设计</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 英雄区 -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>长白山人参精华</h1>
+            <p>千年传承 · 现代科技 · 品质保证</p>
+            <a href="#model" class="hero-btn">
+                <i class="fas fa-cube"></i> 探索产品
+            </a>
+        </div>
+    </section>
+
+    <!-- 3D模型展示区 -->
+    <section id="model" class="model-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>360° 产品展示</h2>
+                <p>拖动鼠标旋转查看产品细节</p>
+            </div>
+            <div class="model-container-wrapper">
+                <div class="model-viewer-3d" id="modelViewer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 1rem;">模型加载中...</p>
+                    </div>
+                    
+                    <!-- 模型控制按钮   -->
+                    <div class="model-controls">
+                        <button class="model-control-btn active" id="autoRotateBtn" title="自动旋转">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                        <button class="model-control-btn" id="resetViewBtn" title="重置视图">
+                            <i class="fas fa-home"></i>
+                        </button>
+                        <button class="model-control-btn" id="fullscreenBtn" title="全屏">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 模型滑块控制  先注释掉 不太喜欢 -->
+                    <!-- <div class="model-sliders">
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span><i class="fas fa-tachometer-alt"></i> 旋转速度</span>
+                                <span id="speedValue">适中</span>
+                            </div>
+                            <input type="range" id="rotationSpeed" min="0" max="2" step="0.1" value="1">
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span><i class="fas fa-sun"></i> HDR曝光</span>
+                                <span id="exposureValue">1.0</span>
+                            </div>
+                            <input type="range" id="exposureLevel" min="0.1" max="3" step="0.1" value="1">
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span><i class="fas fa-lightbulb"></i> 环境光强度</span>
+                                <span id="envIntensityValue">1.0</span>
+                            </div>
+                            <input type="range" id="envIntensity" min="0" max="3" step="0.1" value="1">
+                        </div> -->
+                    </div>
+                    
+                    <!-- 模型统计信息 -->
+                    <!-- <div class="model-stats" id="modelStats">
+                        加载中...
+                    </div> -->
+                </div>
+                <div class="model-info">
+                    <h3>产品亮点</h3>
+                    <p>本品精选长白山5年生人参，采用现代低温萃取技术，最大程度保留人参皂苷等有效成分。每一瓶都经过严格的质量检测，确保品质纯正。</p>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-mountain"></i>
+                            <div>
+                                <strong>长白山原产地</strong><br>
+                                <small>海拔800-1000米优质产区</small>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-flask"></i>
+                            <div>
+                                <strong>低温萃取技术</strong><br>
+                                <small>保留98%有效成分</small>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-certificate"></i>
+                            <div>
+                                <strong>GMP认证生产</strong><br>
+                                <small>药品级生产标准</small>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-shield-alt"></i>
+                            <div>
+                                <strong>全程质量追溯</strong><br>
+                                <small>扫码查询产品信息</small>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 产品信息卡片 -->
+    <section id="info" class="info-cards">
+        <div class="container">
+            <div class="section-title">
+                <h2>产品信息</h2>
+                <p>科学配方 · 精准功效</p>
+            </div>
+            <div class="cards-grid">
+                <div class="info-card">
+                    <div class="card-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <h4>主要成分</h4>
+                    <ul>
+                        <li><i class="fas fa-check"></i> 人参皂苷 Rg1, Rb1</li>
+                        <li><i class="fas fa-check"></i> 多糖类物质</li>
+                        <li><i class="fas fa-check"></i> 氨基酸 18种</li>
+                        <li><i class="fas fa-check"></i> 微量元素</li>
+                        <li><i class="fas fa-check"></i> 挥发油成分</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <div class="card-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h4>主要功效</h4>
+                    <ul>
+                        <li><i class="fas fa-check"></i> 大补元气，复脉固脱</li>
+                        <li><i class="fas fa-check"></i> 补脾益肺，生津养血</li>
+                        <li><i class="fas fa-check"></i> 安神益智，增强记忆</li>
+                        <li><i class="fas fa-check"></i> 提高免疫力</li>
+                        <li><i class="fas fa-check"></i> 抗疲劳，抗衰老</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <div class="card-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <h4>适用人群</h4>
+                    <ul>
+                        <li><i class="fas fa-check"></i> 体质虚弱者</li>
+                        <li><i class="fas fa-check"></i> 术后恢复人群</li>
+                        <li><i class="fas fa-check"></i> 工作压力大者</li>
+                        <li><i class="fas fa-check"></i> 中老年保健</li>
+                        <li><i class="fas fa-check"></i> 免疫力低下者</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 三维动画展示 -->
+    <section id="animation" class="animation-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>作用机制动画</h2>
+                <p>科学解析人参在人体内的作用过程</p>
+            </div>
+            <div class="animation-container">
+                <div class="animation-placeholder">
+                    <i class="fas fa-play-circle"></i>
+                    <h3>作用机制三维动画</h3>
+                    <p style="margin-top: 1rem; opacity: 0.8;">展示人参有效成分在人体内的吸收与作用过程</p>
+                </div>
+            </div>
+            <div class="animation-controls">
+                <button class="anim-btn" onclick="alert('播放动画功能')">
+                    <i class="fas fa-play"></i> 播放动画
+                </button>
+                <button class="anim-btn" onclick="alert('切换视角功能')">
+                    <i class="fas fa-eye"></i> 切换视角
+                </button>
+                <button class="anim-btn" onclick="alert('下载资料功能')">
+                    <i class="fas fa-download"></i> 下载资料
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 溯源信息 -->
+    <section id="trace" class="traceability-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>全程溯源追踪</h2>
+                <p>从田间到餐桌，每一步都可追溯</p>
+            </div>
+            <div class="trace-timeline">
+                <div class="trace-item">
+                    <div class="trace-content">
+                        <div class="trace-icon"><i class="fas fa-map-marked-alt"></i></div>
+                        <h4>原料产地</h4>
+                        <div class="date">2024年春季</div>
+                        <p><strong>长白山保护区</strong><br>
+                        纬度：42°N，海拔：850-950米<br>
+                        土壤pH值：5.5-6.5<br>
+                        年平均气温：3-7℃<br>
+                        5年生优质人参</p>
+                    </div>
+                </div>
+                <div class="trace-item">
+                    <div class="trace-content">
+                        <div class="trace-icon"><i class="fas fa-hands"></i></div>
+                        <h4>采收加工</h4>
+                        <div class="date">2024年9月</div>
+                        <p><strong>专业采收团队</strong><br>
+                        人工精选采收<br>
+                        当日清洗、分级<br>
+                        低温干燥处理<br>
+                        保持完整药性</p>
+                    </div>
+                </div>
+                <div class="trace-item">
+                    <div class="trace-content">
+                        <div class="trace-icon"><i class="fas fa-industry"></i></div>
+                        <h4>生产加工</h4>
+                        <div class="date">2024年10月</div>
+                        <p><strong>GMP认证车间</strong><br>
+                        低温萃取技术<br>
+                        超临界CO2提取<br>
+                        无菌灌装生产<br>
+                        生产批号：20241015</p>
+                    </div>
+                </div>
+                <div class="trace-item">
+                    <div class="trace-content">
+                        <div class="trace-icon"><i class="fas fa-microscope"></i></div>
+                        <h4>质量检测</h4>
+                        <div class="date">2024年10月</div>
+                        <p><strong>第三方检测机构</strong><br>
+                        人参皂苷含量：≥4%<br>
+                        重金属检测：合格<br>
+                        微生物检测：合格<br>
+                        农药残留：未检出</p>
+                    </div>
+                </div>
+                <div class="trace-item">
+                    <div class="trace-content">
+                        <div class="trace-icon"><i class="fas fa-truck"></i></div>
+                        <h4>物流配送</h4>
+                        <div class="date">2024年11月</div>
+                        <p><strong>冷链运输</strong><br>
+                        全程温控2-8℃<br>
+                        48小时内送达<br>
+                        实时GPS追踪<br>
+                        保证产品新鲜</p>
+                    </div>
+                </div>
+                <div class="trace-item">
+                    <div class="trace-content">
+                        <div class="trace-icon"><i class="fas fa-qrcode"></i></div>
+                        <h4>防伪追溯</h4>
+                        <div class="date">扫码查询</div>
+                        <p><strong>一物一码</strong><br>
+                        扫描产品二维码<br>
+                        查询完整溯源信息<br>
+                        验证产品真伪<br>
+                        了解生产全过程</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VI设计展示 -->
+    <section id="vi" class="vi-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>品牌视觉设计</h2>
+                <p>专业VI设计团队打造的品牌形象</p>
+            </div>
+            <div class="vi-gallery">
+                <div class="vi-item">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e8f5e9' width='400' height='300'/%3E%3Ctext x='50%25' y='45%25' text-anchor='middle' fill='%232c7744' font-size='24' font-weight='bold'%3E包装设计%3C/text%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='%235a9f68' font-size='16'%3EPackage Design%3C/text%3E%3C/svg%3E" alt="包装设计">
+                    <div class="vi-overlay">
+                        <h4>产品包装设计</h4>
+                        <p>采用环保材料，融合中国传统元素与现代简约风格</p>
+                    </div>
+                </div>
+                <div class="vi-item">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23c8e6c9' width='400' height='300'/%3E%3Ctext x='50%25' y='45%25' text-anchor='middle' fill='%232c7744' font-size='24' font-weight='bold'%3ELOGO设计%3C/text%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='%235a9f68' font-size='16'%3ELogo Design%3C/text%3E%3C/svg%3E" alt="Logo设计">
+                    <div class="vi-overlay">
+                        <h4>品牌标识系统</h4>
+                        <p>以人参叶片为设计灵感，象征生命力与健康</p>
+                    </div>
+                </div>
+                <div class="vi-item">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23a5d6a7' width='400' height='300'/%3E%3Ctext x='50%25' y='45%25' text-anchor='middle' fill='%232c7744' font-size='24' font-weight='bold'%3E色彩系统%3C/text%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='%235a9f68' font-size='16'%3EColor System%3C/text%3E%3C/svg%3E" alt="色彩系统">
+                    <div class="vi-overlay">
+                        <h4>品牌色彩体系</h4>
+                        <p>绿色系为主色调，传递自然、健康、生机的品牌理念</p>
+                    </div>
+                </div>
+                <div class="vi-item">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%2381c784' width='400' height='300'/%3E%3Ctext x='50%25' y='45%25' text-anchor='middle' fill='%23ffffff' font-size='24' font-weight='bold'%3E字体规范%3C/text%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='%23ffffff' font-size='16'%3ETypography%3C/text%3E%3C/svg%3E" alt="字体规范">
+                    <div class="vi-overlay">
+                        <h4>字体设计规范</h4>
+                        <p>中英文字体搭配，既现代又不失传统韵味</p>
+                    </div>
+                </div>
+                <div class="vi-item">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%2366bb6a' width='400' height='300'/%3E%3Ctext x='50%25' y='45%25' text-anchor='middle' fill='%23ffffff' font-size='24' font-weight='bold'%3E辅助图形%3C/text%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='%23ffffff' font-size='16'%3EGraphic Elements%3C/text%3E%3C/svg%3E" alt="辅助图形">
+                    <div class="vi-overlay">
+                        <h4>辅助图形系统</h4>
+                        <p>山脉、云纹等元素，呼应长白山产地特色</p>
+                    </div>
+                </div>
+                <div class="vi-item">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%234caf50' width='400' height='300'/%3E%3Ctext x='50%25' y='45%25' text-anchor='middle' fill='%23ffffff' font-size='24' font-weight='bold'%3E应用展示%3C/text%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='%23ffffff' font-size='16'%3EApplication%3C/text%3E%3C/svg%3E" alt="应用展示">
+                    <div class="vi-overlay">
+                        <h4>品牌应用场景</h4>
+                        <p>包装、宣传物料、数字媒体等全场景应用</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>联系我们</h3>
+                <p><i class="fas fa-map-marker-alt"></i> 吉林省长白山保护开发区</p>
+                <p><i class="fas fa-phone"></i> 400-888-8888</p>
+                <p><i class="fas fa-envelope"></i> service@ginseng.com</p>
+                <p><i class="fas fa-clock"></i> 工作时间：9:00-18:00</p>
+            </div>
+            <div class="footer-section">
+                <h3>快速链接</h3>
+                <a href="#model">产品展示</a>
+                <a href="#info">产品信息</a>
+                <a href="#trace">溯源查询</a>
+                <a href="#vi">品牌设计</a>
+            </div>
+            <div class="footer-section">
+                <h3>关注我们</h3>
+                <div class="qr-code">
+                    <i class="fas fa-qrcode"></i>
+                </div>
+                <p style="text-align: center;">扫码关注公众号</p>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>© 2025 养生堂·人参系列 | 中医药可视化科普项目</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                <i class="fas fa-info-circle"></i> 本展示仅供参考，具体用药请咨询专业医师
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Three.js 3D模型初始化
+        let scene, camera, renderer, controls, model;
+        let autoRotate = true;
+        let rotationSpeed = 0.01;
+        let currentEnvMap = null;
+
+        function init3DModel() {
+            const container = document.getElementById('modelViewer');
+            
+            // 创建场景
+            scene = new THREE.Scene();
+            // 不设置纯色背景，等HDR加载后设置
+            
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(
+                75, 
+                container.clientWidth / container.clientHeight, 
+                0.1, 
+                1000
+            );
+            camera.position.set(0, 2, 5);
+            
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            
+            // HDR设置
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.0;
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.physicallyCorrectLights = true;
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // 保存控制元素
+            const controls_ui = container.querySelector('.model-controls');
+            const sliders_ui = container.querySelector('.model-sliders');
+            const stats_ui = container.querySelector('.model-stats');
+            
+            // 清空容器并添加渲染器
+            container.innerHTML = '';
+            container.appendChild(renderer.domElement);
+            
+            // 重新添加控制界面
+            if (controls_ui) container.appendChild(controls_ui);
+            if (sliders_ui) container.appendChild(sliders_ui);
+            if (stats_ui) container.appendChild(stats_ui);
+            
+            // 添加少量补光（用于阴影）
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            directionalLight.position.set(5, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+            
+            // 添加控制器
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 2;
+            controls.maxDistance = 10;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 1.0;
+            
+            // 加载HDR环境贴图
+            loadHDR();
+            
+            // 创建简单的瓶子模型
+            // createBottleModel();
+
+        const loader = new THREE.GLTFLoader();
+        loader.load('./text.glb', function(gltf) {
+            model = gltf.scene;
+    
+    // 优化材质以展示HDR
+    model.traverse((child) => {
+        if (child.isMesh && child.material) {
+            child.material.envMapIntensity = 1.5;
+            child.castShadow = true;
+            child.receiveShadow = true;
+        }
+    });
+    
+    scene.add(model);
+});
+            
+            // 渲染循环
+            animate();
+            
+            // 窗口调整
+            window.addEventListener('resize', onWindowResize);
+            
+            // 绑定控制按钮事件
+            bindModelControls();
+        }
+        
+        function loadHDR() {
+            const rgbeLoader = new THREE.RGBELoader();
+            rgbeLoader.load(
+                'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/textures/equirectangular/royal_esplanade_1k.hdr',
+                function(texture) {
+                    texture.mapping = THREE.EquirectangularReflectionMapping;
+                    
+                    // 使用PMREMGenerator生成预过滤环境贴图
+                    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+                    pmremGenerator.compileEquirectangularShader();
+                    const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+                    
+                    // 设置环境贴图和背景
+                    scene.environment = envMap;
+                    scene.background = envMap;
+                    currentEnvMap = envMap;
+                    
+                    pmremGenerator.dispose();
+                    texture.dispose();
+                    
+                    console.log('HDR环境贴图加载成功');
+                },
+                undefined,
+                function(error) {
+                    console.error('HDR加载失败:', error);
+                    // 如果HDR加载失败，设置纯色背景
+                    scene.background = new THREE.Color(0x1a1a1a);
+                }
+            );
+        }
+
+        
+        
+        // function createBottleModel() {
+        //     const bottleGroup = new THREE.Group();
+            
+        //     // 瓶身 - 使用更好的材质以展示HDR反射
+        //     const bottleGeometry = new THREE.CylinderGeometry(0.8, 1, 2, 32);
+        //     const bottleMaterial = new THREE.MeshPhysicalMaterial({ 
+        //         color: 0x2c7744,
+        //         transparent: true,
+        //         opacity: 0.85,
+        //         roughness: 0.2,
+        //         metalness: 0.3,
+        //         clearcoat: 0.8,
+        //         clearcoatRoughness: 0.1,
+        //         envMapIntensity: 1.5
+        //     });
+        //     const bottle = new THREE.Mesh(bottleGeometry, bottleMaterial);
+        //     bottle.position.y = 0.5;
+        //     bottle.castShadow = true;
+        //     bottle.receiveShadow = true;
+        //     bottleGroup.add(bottle);
+            
+        //     // 瓶口 - 金属材质
+        //     const neckGeometry = new THREE.CylinderGeometry(0.4, 0.8, 0.3, 32);
+        //     const neckMaterial = new THREE.MeshStandardMaterial({ 
+        //         color: 0xd4af37,
+        //         roughness: 0.2,
+        //         metalness: 0.9,
+        //         envMapIntensity: 2.0
+        //     });
+        //     const neck = new THREE.Mesh(neckGeometry, neckMaterial);
+        //     neck.position.y = 1.65;
+        //     neck.castShadow = true;
+        //     neck.receiveShadow = true;
+        //     bottleGroup.add(neck);
+            
+        //     // 瓶塞
+        //     const corkGeometry = new THREE.CylinderGeometry(0.45, 0.45, 0.4, 32);
+        //     const corkMaterial = new THREE.MeshStandardMaterial({ 
+        //         color: 0x8b4513,
+        //         roughness: 0.8,
+        //         metalness: 0.1
+        //     });
+        //     const cork = new THREE.Mesh(corkGeometry, corkMaterial);
+        //     cork.position.y = 1.95;
+        //     cork.castShadow = true;
+        //     bottleGroup.add(cork);
+            
+        //     // 标签
+        //     const labelGeometry = new THREE.CylinderGeometry(0.81, 0.81, 0.8, 32, 1, true);
+        //     const labelMaterial = new THREE.MeshStandardMaterial({
+        //         color: 0xf8f8f8,
+        //         roughness: 0.7,
+        //         side: THREE.DoubleSide
+        //     });
+        //     const label = new THREE.Mesh(labelGeometry, labelMaterial);
+        //     label.position.y = 0.5;
+        //     bottleGroup.add(label);
+            
+        //     // 地面 - 反光材质
+        //     const floorGeometry = new THREE.CircleGeometry(3, 64);
+        //     const floorMaterial = new THREE.MeshStandardMaterial({ 
+        //         color: 0xffffff,
+        //         roughness: 0.2,
+        //         metalness: 0.8,
+        //         envMapIntensity: 1.5
+        //     });
+        //     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        //     floor.rotation.x = -Math.PI / 2;
+        //     floor.position.y = -0.5;
+        //     floor.receiveShadow = true;
+        //     scene.add(floor);
+            
+        //     scene.add(bottleGroup);
+        //     model = bottleGroup;
+            
+        //     // 更新模型统计信息
+        //     updateModelStats(bottleGeometry, neckGeometry, corkGeometry, labelGeometry);
+        // }
+        
+        function updateModelStats(...geometries) {
+            let totalVertices = 0;
+            let totalFaces = 0;
+            
+            geometries.forEach(geo => {
+                if (geo.attributes && geo.attributes.position) {
+                    totalVertices += geo.attributes.position.count;
+                }
+                if (geo.index) {
+                    totalFaces += geo.index.count / 3;
+                }
+            });
+            
+            document.getElementById('modelStats').textContent = 
+                `顶点: ${totalVertices.toLocaleString()} | 面数: ${Math.floor(totalFaces).toLocaleString()}`;
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (autoRotate && model) {
+                model.rotation.y += rotationSpeed;
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        function onWindowResize() {
+            const container = document.getElementById('modelViewer');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        function bindModelControls() {
+            // 自动旋转按钮
+            document.getElementById('autoRotateBtn').addEventListener('click', function() {
+                autoRotate = !autoRotate;
+                controls.autoRotate = autoRotate;
+                this.classList.toggle('active');
+            });
+            
+            // 重置视图按钮
+            document.getElementById('resetViewBtn').addEventListener('click', function() {
+                controls.reset();
+                camera.position.set(0, 2, 5);
+                if (model) {
+                    model.rotation.set(0, 0, 0);
+                }
+            });
+            
+            // 全屏按钮
+            document.getElementById('fullscreenBtn').addEventListener('click', function() {
+                const container = document.getElementById('modelViewer');
+                if (!document.fullscreenElement) {
+                    container.requestFullscreen();
+                    this.innerHTML = '<i class="fas fa-compress"></i>';
+                } else {
+                    document.exitFullscreen();
+                    this.innerHTML = '<i class="fas fa-expand"></i>';
+                }
+            });
+            
+            // // 旋转速度滑块
+            // document.getElementById('rotationSpeed').addEventListener('input', function() {
+            //     rotationSpeed = this.value * 0.01;
+            //     controls.autoRotateSpeed = this.value * 50;
+            //     const speedText = this.value < 0.5 ? '慢' : this.value < 1.5 ? '适中' : '快';
+            //     document.getElementById('speedValue').textContent = speedText;
+            // });
+            
+            // // HDR曝光度滑块
+            // document.getElementById('exposureLevel').addEventListener('input', function() {
+            //     renderer.toneMappingExposure = parseFloat(this.value);
+            //     document.getElementById('exposureValue').textContent = this.value;
+            // });
+            
+            // // 环境光强度滑块
+            // document.getElementById('envIntensity').addEventListener('input', function() {
+            //     const intensity = parseFloat(this.value);
+                
+            //     // 更新所有材质的环境贴图强度
+            //     if (model) {
+            //         model.traverse((child) => {
+            //             if (child.isMesh && child.material) {
+            //                 child.material.envMapIntensity = intensity;
+            //             }
+            //         });
+            //     }
+                
+            //     // 更新地面材质
+            //     scene.traverse((child) => {
+            //         if (child.isMesh && child.geometry.type === 'CircleGeometry') {
+            //             if (child.material) {
+            //                 child.material.envMapIntensity = intensity;
+            //             }
+            //         }
+            //     });
+                
+            //     document.getElementById('envIntensityValue').textContent = intensity.toFixed(1);
+            // });
+        }
+        
+        // 导航栏滚动效果
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+        
+        // 页面加载完成后初始化3D模型
+        window.addEventListener('load', function() {
+            init3DModel();
+        });
+        
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
