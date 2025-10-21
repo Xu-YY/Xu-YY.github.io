@@ -1211,69 +1211,91 @@
         let rotationSpeed = 0.01;
 
         function init3DModel() {
-            const container = document.getElementById('modelViewer');
-            
-            // 创建场景
-            scene = new THREE.Scene();
-            
-            // 创建相机
-            camera = new THREE.PerspectiveCamera(
-                75, 
-                container.clientWidth / container.clientHeight, 
-                0.1, 
-                1000
-            );
-            camera.position.set(0, 2, 5);
-            
-            // 创建渲染器
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            
-            // HDR设置
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.0;
-            renderer.outputEncoding = THREE.sRGBEncoding;
-            renderer.physicallyCorrectLights = true;
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            
-            // 保存控制元素
-            const controls_ui = container.querySelector('.model-controls');
-            const loading_ui = container.querySelector('.loading');
-            
-            // 清空容器并添加渲染器
-            container.innerHTML = '';
-            container.appendChild(renderer.domElement);
-            
-            // 重新添加控制界面
-            if (controls_ui) container.appendChild(controls_ui);
-            if (loading_ui) container.appendChild(loading_ui);
-            
-            // 添加光源
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-            directionalLight.position.set(5, 10, 5);
-            directionalLight.castShadow = true;
-            scene.add(directionalLight);
-            
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambientLight);
-            
-            // 添加控制器
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.minDistance = 2;
-            controls.maxDistance = 10;
-            controls.autoRotate = true;
-            controls.autoRotateSpeed = 1.0;
-            
-            // 加载HDR环境贴图
-            loadHDR();
-            
-            // 创建简单的瓶子模型
-            // createBottleModel();
-            const loader = new THREE.GLTFLoader();
+            try {
+                const container = document.getElementById('modelViewer');
+                
+                // 检测WebGL支持
+                if (!window.WebGLRenderingContext) {
+                    showError('您的设备不支持WebGL，无法显示3D模型');
+                    return;
+                }
+                
+                // 创建场景
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x1a1a1a);
+                
+                // 创建相机
+                camera = new THREE.PerspectiveCamera(
+                    75, 
+                    container.clientWidth / container.clientHeight, 
+                    0.1, 
+                    1000
+                );
+                camera.position.set(0, 2, 5);
+                
+                // 创建渲染器 - 移动端优化配置
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                renderer = new THREE.WebGLRenderer({ 
+                    antialias: !isMobile, // 移动端关闭抗锯齿以提高性能
+                    alpha: true,
+                    powerPreference: isMobile ? 'low-power' : 'high-performance'
+                });
+                
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                
+                // 简化渲染设置以提高移动端兼容性
+                renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                renderer.toneMappingExposure = 1.0;
+                
+                // 移动端禁用阴影以提高性能
+                if (!isMobile) {
+                    renderer.shadowMap.enabled = true;
+                    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                }
+                
+                // 保存控制元素
+                const controls_ui = container.querySelector('.model-controls');
+                const loading_ui = container.querySelector('.loading');
+                
+                // 清空容器并添加渲染器
+                container.innerHTML = '';
+                container.appendChild(renderer.domElement);
+                
+                // 重新添加控制界面
+                if (controls_ui) container.appendChild(controls_ui);
+                if (loading_ui) container.appendChild(loading_ui);
+                
+                // 添加光源
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+                directionalLight.position.set(5, 10, 5);
+                if (!isMobile) {
+                    directionalLight.castShadow = true;
+                }
+                scene.add(directionalLight);
+                
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambientLight);
+                
+                // 添加控制器
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                controls.minDistance = 2;
+                controls.maxDistance = 10;
+                controls.autoRotate = true;
+                controls.autoRotateSpeed = 1.0;
+                
+                // 移动端优化触摸控制
+                if (isMobile) {
+                    controls.rotateSpeed = 0.5;
+                    controls.zoomSpeed = 0.8;
+                }
+                
+                // 先创建模型，再尝试加载HDR（HDR可能失败但不影响模型显示）
+                // createBottleModel();
+                const loader = new THREE.GLTFLoader();
         loader.load('./text.glb', function(gltf) {
             model = gltf.scene;
     
@@ -1288,47 +1310,72 @@
     
     scene.add(model);
 });
-            
-            // 渲染循环
-            animate();
-            
-            // 窗口调整
-            window.addEventListener('resize', onWindowResize);
-            
-            // 绑定控制按钮事件
-            bindModelControls();
+                
+                // 隐藏加载提示
+                setTimeout(() => {
+                    const loading = document.querySelector('.loading');
+                    if (loading) loading.style.display = 'none';
+                }, 500);
+                
+                // 尝试加载HDR（失败也不影响基本显示）
+                if (!isMobile) {
+                    loadHDR();
+                }
+                
+                // 渲染循环
+                animate();
+                
+                // 窗口调整
+                window.addEventListener('resize', onWindowResize);
+                
+                // 绑定控制按钮事件
+                bindModelControls();
+                
+            } catch (error) {
+                console.error('3D模型初始化失败:', error);
+                showError('3D模型加载失败，请刷新页面重试');
+            }
+        }
+        
+        function showError(message) {
+            const container = document.getElementById('modelViewer');
+            container.innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-exclamation-triangle" style="color: #ff6b6b; font-size: 3rem;"></i>
+                    <p style="margin-top: 1rem; color: white;">${message}</p>
+                </div>
+            `;
         }
         
         function loadHDR() {
-            const rgbeLoader = new THREE.RGBELoader();
-            rgbeLoader.load(
-                'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/textures/equirectangular/royal_esplanade_1k.hdr',
-                function(texture) {
-                    texture.mapping = THREE.EquirectangularReflectionMapping;
-                    
-                    const pmremGenerator = new THREE.PMREMGenerator(renderer);
-                    pmremGenerator.compileEquirectangularShader();
-                    const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-                    
-                    scene.environment = envMap;
-                    scene.background = envMap;
-                    
-                    pmremGenerator.dispose();
-                    texture.dispose();
-                    
-                    // 隐藏加载提示
-                    const loading = document.querySelector('.loading');
-                    if (loading) loading.style.display = 'none';
-                },
-                undefined,
-                function(error) {
-                    console.error('HDR加载失败:', error);
-                    scene.background = new THREE.Color(0x1a1a1a);
-                    const loading = document.querySelector('.loading');
-                    if (loading) loading.style.display = 'none';
-                }
-            );
+            try {
+                const rgbeLoader = new THREE.RGBELoader();
+                rgbeLoader.load(
+                    'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/textures/equirectangular/royal_esplanade_1k.hdr',
+                    function(texture) {
+                        texture.mapping = THREE.EquirectangularReflectionMapping;
+                        
+                        const pmremGenerator = new THREE.PMREMGenerator(renderer);
+                        pmremGenerator.compileEquirectangularShader();
+                        const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+                        
+                        scene.environment = envMap;
+                        scene.background = envMap;
+                        
+                        pmremGenerator.dispose();
+                        texture.dispose();
+                    },
+                    undefined,
+                    function(error) {
+                        console.log('HDR加载失败，使用纯色背景:', error);
+                        // 失败不影响模型显示，保持纯色背景
+                    }
+                );
+            } catch (error) {
+                console.log('HDR加载器初始化失败:', error);
+            }
         }
+        
         
         
         function animate() {
